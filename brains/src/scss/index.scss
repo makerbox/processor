@@ -1,0 +1,129 @@
+@font-face {
+    font-family: 'Sora';
+    src: url('../font/Sora-Regular.woff2') format('woff2'),
+        url('../font/Sora-Regular.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+// colours
+$rose: #B8336A;
+$blue: #7D8CC4;
+$pink: #C490D1;
+$white: #F0F0F0;
+
+h1, h2, h3{
+	font-family: 'Sora';
+	color: #B8336A;
+}
+
+p, li, label, td{
+	font-family: 'Sora';
+}
+
+.inputs{
+}
+
+.input-group{
+	padding: 1rem;
+}
+
+.buttons{
+	display: flex;	
+	gap: 1rem;
+	padding: 1rem 0;
+	button{
+		box-shadow: nonw;
+		border: none;
+		border-radius: 1em;
+		color: $white;
+		background: $blue;
+		font-size: 1.5rem;
+		padding: .5em 1em;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		cursor: pointer;
+		transition: all .5s;
+		&:hover{
+			background: $pink;
+			color: $white;
+		}
+	}
+}
+
+.filters{
+	display: none;	
+	gap: 1rem;
+	padding: 1rem 0;
+	&.is-active{
+		display: flex;
+	}
+	button{
+		box-shadow: nonw;
+		border: none;
+		border-radius: 1em;
+		color: $white;
+		background: $blue;
+		font-size: 1.5rem;
+		padding: .5em 1em;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		cursor: pointer;
+		transition: all .5s;
+		opacity: .5;
+		&:hover{
+			background: $pink;
+			color: $white;
+		}
+		&.is-active{
+			opacity: 1;
+		}
+	}
+}
+
+[data-filter]{
+	&.is-hidden{
+		display: none;
+	}
+}
+
+.results{
+	width: 100%;
+	> tr{
+		background: $pink;
+	}
+	tr{
+		border: 2px solid $white;
+	}
+	th{
+		border-bottom: 1px solid $white;
+	}
+	th,td{
+		color: $white;
+		padding-right: 1rem;
+	}
+	> tr > td{
+		padding-left: 1rem;
+	}
+	.fail{
+		background: red;
+	}
+	.pass{
+		background: green;
+	}
+	.unsubmitted{
+		background: orange;
+	}
+}
+
+.first-row{
+	font-weight: bold;
+}
+
+.is-inactive{
+	opacity: .5;
+	pointer-events: none;
+}
