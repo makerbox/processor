@@ -189,7 +189,8 @@ $(document).ready(function(){
 				thisStudent["passFail"] = "pass";
 			}
 			// get the % passed and % failed (100 - % passed)
-			thisStudent["passPerc"] = thisStudent["results"].length
+			thisStudent["passPerc"] = Math.round(100 / (thisStudent["results"].length / numPass));
+			thisStudent["failPerc"] = 100 - Math.round(100 / (thisStudent["results"].length / numPass))	;
 		})
 
 		processTable(mergedArray);
@@ -207,13 +208,16 @@ $(document).ready(function(){
 		table.html(''); // clear table ready for new data
 		$(data).each(function(){
 			let thisStudent = this;
-			let htmlRow = '<tr data-filter="'+thisStudent['passFail']+'"><td><table><tr class="'+thisStudent['passFail']+'"><td><table>';
+			let htmlRow = '<tr data-filter="'+thisStudent['passFail']+'"><td><table><tr data-toggle class="'+thisStudent['passFail']+'"><td><table>';
 			htmlRow += '<td>'+returnName(thisStudent["email"])+'</td>';
 			htmlRow += '<td>'+thisStudent["email"]+'</td>';
 			htmlRow += '<td>'+thisStudent["student id"]+'</td>';
-			htmlRow += '<td class="'+thisStudent['passFail']+'">Overall: '+thisStudent["passFail"]+'</td>';
-			htmlRow += '</table></td></tr>';
-			htmlRow += '<tr><td><table>';
+			htmlRow += '<td class="'+thisStudent['passFail']+'">Overall: '+thisStudent["passFail"]+' <hr /><span class="pass">'+thisStudent['passPerc']+'% assessments passed</span> / <span class="fail">'+thisStudent['failPerc']+'% assessments failed</span></td>';
+			htmlRow += '</table></td><td class="toggle">';
+			htmlRow += '<span class="expand"><?xml version="1.0" encoding="utf-8"?><svg fill="#000000" width="800px" height="800px" viewBox="-1 0 19 19" xmlns="http://www.w3.org/2000/svg" class="cf-icon-svg"><path d="M16.416 9.579A7.917 7.917 0 1 1 8.5 1.662a7.916 7.916 0 0 1 7.916 7.917zm-2.548-2.395a.792.792 0 0 0-1.12 0L8.5 11.433l-4.249-4.25a.792.792 0 0 0-1.12 1.12l4.809 4.809a.792.792 0 0 0 1.12 0l4.808-4.808a.792.792 0 0 0 0-1.12z"/></svg></span>';
+			htmlRow += '<span class="contract"><?xml version="1.0" encoding="utf-8"?><svg fill="#000000" width="800px" height="800px" viewBox="-1.7 0 20.4 20.4" xmlns="http://www.w3.org/2000/svg" class="cf-icon-svg"><path d="M16.417 10.283A7.917 7.917 0 1 1 8.5 2.366a7.916 7.916 0 0 1 7.917 7.917zm-6.804.01 3.032-3.033a.792.792 0 0 0-1.12-1.12L8.494 9.173 5.46 6.14a.792.792 0 0 0-1.12 1.12l3.034 3.033-3.033 3.033a.792.792 0 0 0 1.12 1.119l3.032-3.033 3.033 3.033a.792.792 0 0 0 1.12-1.12z"/></svg></span>';
+			htmlRow += '</td></tr>';
+			htmlRow += '<tr class="accordion"><td><table>';
 			htmlRow += '<tr><th>Pass/fail</th><th>Grade</th><th>Total</th><th>Submitted date</th><th>Due date</th><th>Submission state</th><th>Org Unit</th><th>Submission type</th></tr>';
 			$(thisStudent['results']).each(function(){
 				let thisResult = this;
@@ -287,6 +291,19 @@ $(document).ready(function(){
 		//deactivate buttons
 		$(document).find("[data-view]").removeClass('is-active');
 		self.addClass('is-active');
+	})
+
+	// handle toggle accordions
+	$(document).on('click touchend', '[data-toggle]', function(e){
+		e.stopPropagation();
+		e.preventDefault();
+		let self = $(this);
+		let thisAccordion = self.closest('[data-filter]');
+		if(thisAccordion.hasClass('is-open')){
+			thisAccordion.removeClass('is-open');
+		}else{
+			thisAccordion.addClass('is-open');
+		}
 	})
 
 })
