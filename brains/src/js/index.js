@@ -306,44 +306,51 @@ $(document).ready(function(){
 		}
 	})
 
+
+	// handle export to csv
+	$(document).on('click touchen', '[data-export-csv]', function(e){
+		e.preventDefault();
+		e.stopPropagation();
+
+		let exportJSON = [];
+		$(document).find('[data-toggle] tr').each(function(){
+			let self = $(this);
+			let rowJSON = {};
+			self.find('td').each(function(index){
+				let thisCell = $(this);
+				if(thisCell.hasClass('pass') || thisCell.hasClass('fail')){ // for the overall results cell, we'll need to do some tidying
+					let cellCode = thisCell.html();
+					let cellOverall = cellCode.split('<hr>')[0].replace('Overall: ','');
+					let cellPassFail = cellCode.split('<hr>')[1];
+					let cellPass = cellPassFail.split(' / ')[0].replace('<span class="pass">', '').replace('assessments passed</span>', '');
+					let cellFail = cellPassFail.split(' / ')[1].replace('<span class="fail">', '').replace('assessments failed</span>', '');
+					rowJSON[index] = cellOverall;
+					rowJSON[index + 1] = cellPass;
+					rowJSON[index + 2] = cellFail;
+				}else{
+					rowJSON[index] = thisCell.text();
+				}
+			});
+			exportJSON.push(rowJSON);
+		});
+		let csvContent = "data:text/csv;charset=utf-8,";
+		csvContent += 'name,email,ID,overall,% passed,% failed,\r\n';
+		$(exportJSON).each(function() {
+		    let thisRow = $(this);
+		    let rowString = '';
+		    thisRow.each(function(){
+		    	let self = $(this); // I know there is a better way of doing this, but I can't get it to work right now, so YOLO
+		    	csvContent += this[0] + ',';
+		    	csvContent += this[1] + ',';
+		    	csvContent += this[2] + ',';
+		    	csvContent += this[3] + ',';
+		    	csvContent += this[4] + ',';
+		    	csvContent += this[5] + ',';
+		    });
+		    csvContent += rowString + "\r\n";
+		});
+		var encodedUri = encodeURI(csvContent);
+		window.open(encodedUri);
+	})
+
 })
-
-
-
-
-// ================== NOTES ON NEXT STEPS ==========================
-
-// To merge students into unique array items:
-// For each, if student is in array, add to that student array item, otherwise add new student to array
-
-// To clean any irrelevant tests:
-// For each student,
-// For each of their results, check if any irrelevancy markers, remove result if marker present.
-
-// To calc pass fail for result:
-// For each student,
-// For each result, if scored over 50%, append pass to result array, otherwise append fail
-
-// To calc total pass fail for student:
-// For each student, var count, var passCount
-// For each result, add 1 to count, if pass add 1 to passCount,
-// If passCount greater than count / 2, mark student as pass
-
-
-
-
-
-// ========================== must have TODO ==================================	
-	
-	// show results = total assessments, total unsubmitted, total passed, total failed,  % passed, % failed, pass / fail (anything else we can do to help understand students?)
-
-	// handle export csv
-
-// ========================== nice to haves ===================================
-	// handle search
-
-	// handle sort
-
-	// handle filter
-
-	// API Canva to get data directly
