@@ -353,4 +353,17 @@ $(document).ready(function(){
 		window.open(encodedUri);
 	})
 
+
+
+	// handle click "MATCH DATA" button
+	$(document).on('click touchend', '[data-match]', function(e){
+		e.stopPropagation();
+		e.preventDefault();
+		match();
+	})
+
+	function match(){
+		$(document).find(".match").addClass('is-visible');
+	}
+
 })

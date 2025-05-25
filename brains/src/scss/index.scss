@@ -13,16 +13,57 @@ $blue: #7D8CC4;
 $pink: #C490D1;
 $white: #F0F0F0;
 
+
 h1, h2, h3{
 	font-family: 'Sora';
 	color: #B8336A;
 }
 
-p, li, label, td{
-	font-family: 'Sora';
+.header{
+	position: relative;
+	width: 100%;
+	padding: 1rem 3rem;
+	border-bottom: 1px solid #000;
+	margin-bottom: 2rem;
 }
 
-.inputs{
+h1{
+	font-size: 3rem;
+	display: flex;
+	align-items: center;
+	justify-content: flex-start;
+	gap: 1rem;
+}
+
+h2{
+	font-size: 1.5rem;
+	font-weight: bold;
+	padding-bottom: 1rem;
+}
+
+p, li, label, td{
+	font-family: 'Sora';
+	font-size: 1rem;
+}
+
+.main{
+	position: relative;
+	width: 100%;
+}
+
+.info, .inputs, .buttons, .filters, .results{
+	position: relative;
+	width: 100%;
+	padding: 1rem 3rem;
+}
+
+ol{
+	list-style: numbers;
+	padding-left: 1rem;
+}
+
+li{
+	padding: .5rem 0;
 }
 
 .input-group{
@@ -32,7 +73,6 @@ p, li, label, td{
 .buttons{
 	display: flex;	
 	gap: 1rem;
-	padding: 1rem 0;
 	button{
 		box-shadow: nonw;
 		border: none;
@@ -173,4 +213,43 @@ p, li, label, td{
 .is-inactive{
 	opacity: .5;
 	pointer-events: none;
+}
+
+
+.match{
+	display: none;
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	padding: 3rem;
+	background: rgba(0,0,0,0.5);
+	&.is-visible{
+		display: block;
+	}
+}
+
+.match__inner{
+	width: 100%;
+	height: 100%;
+	position: relative;
+	background: #FFF;
+	border-radius: 1rem;
+	padding: 3rem;
+}
+
+.match__close{
+	position: absolute;
+	top: 3rem;
+	right: 3rem;
+	width: 2rem;
+	height: 2rem;
+	pointer: cursor;
+	svg{
+		width: 100%;
+		height: 100%;
+		display: block;
+		object-fit: contain;
+	}
 }
