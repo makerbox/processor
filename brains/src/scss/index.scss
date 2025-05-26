@@ -269,8 +269,11 @@ li{
 	left: 0;
 	right: auto;
 	top: 0;
-	background: blue;
+	background: #b8336a;
 	transition: all 1s;
+	&.is-populating{
+		background: #7d8cc4;
+	}
 	&.is-finished{
 		background: green;
 		left: auto;

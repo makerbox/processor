@@ -292,9 +292,9 @@ $(document).ready(function(){
 	$(document).on('click touchend', '[data-process-results]', function(e){
 		e.stopPropagation();
 		e.preventDefault();
-		progressBar.width('10%').removeClass('is-finished');;
+		progressBar.width('10%').removeClass('is-finished', 'is-populating');
 		setTimeout(function(){ // actually process a second after, so progress bar can show
-			progressBar.width('15%');
+			progressBar.width('15%').addClass('is-populating');
 			exportToArray();
 		}, 1000);
 	})
