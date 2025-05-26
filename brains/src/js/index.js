@@ -2,6 +2,7 @@ var moment = require('moment'); // require for turning AU time into a workable f
 var XLSX = require('xlsx'); // require for reading excel sheets
 
 $(document).ready(function(){
+	let progressBar = $("[data-progress-bar]");
 
 	function exportToArray() { // create an array before exporting to HTML table
 
@@ -16,7 +17,13 @@ $(document).ready(function(){
 			//Checks whether the browser supports HTML5    
 			if (typeof(FileReader) != "undefined") {  
 				// rock and roll!
-				var reader = new FileReader();  
+				var reader = new FileReader();
+				let fileUpload = $("[data-file-upload]")[0].files[0];
+
+				// process the file
+				reader.readAsText(fileUpload); 
+
+
 				reader.onload = function(e) {  
 					//Splitting of Rows in the csv file    
 					var csvrows = e.target.result.split("\n"); 
@@ -25,7 +32,10 @@ $(document).ready(function(){
 					$(headings).each(function(i){
 						headings[i] = headings[i].trim();
 					})
+					
 					for (var i = 1; i < csvrows.length; i++) {  // start at i=1 to skip headings row
+					
+
 						if (csvrows[i] != "") {
 							var rowJSON = {};
 							var csvcols = csvrows[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);  // **USE REGEX TO ALLOW COMMAS IN CELL DATA
@@ -34,11 +44,13 @@ $(document).ready(function(){
 								rowJSON[headings[j]] = csvcols[j];
 							}
 							resultsJSON.push(rowJSON);  
+
+							
 						}  
 					}
+					fillMatcher(resultsJSON);
 					filterDates(resultsJSON);
 				}  
-				reader.readAsText($("[data-file-upload]")[0].files[0]);  
 			} else {  
 				alert("Sorry! Your browser does not support HTML5!");  
 			}  
@@ -53,6 +65,7 @@ $(document).ready(function(){
 			// }
 		}
 	}  
+
 
 	function filterDates(resultsJSON) {
 
@@ -206,7 +219,14 @@ $(document).ready(function(){
 	function processTable(data){
 		let table = $(document).find('[data-results-output]');
 		table.html(''); // clear table ready for new data
-		$(data).each(function(){
+		$(data).each(function(index){
+			let currentPercent = Math.round(100 / (data.length / index));
+			progressBar.width(currentPercent+'%');
+			if(currentPercent >= 99){
+				setTimeout(function(){ // change to green and be full a second after finishing progress
+					progressBar.width('100%').addClass('is-finished');
+				}, 1000);
+			};
 			let thisStudent = this;
 			let htmlRow = '<tr data-filter="'+thisStudent['passFail']+'"><td><table><tr data-toggle class="'+thisStudent['passFail']+'"><td><table>';
 			htmlRow += '<td>'+returnName(thisStudent["email"])+'</td>';
@@ -272,7 +292,11 @@ $(document).ready(function(){
 	$(document).on('click touchend', '[data-process-results]', function(e){
 		e.stopPropagation();
 		e.preventDefault();
-		exportToArray();
+		progressBar.width('10%').removeClass('is-finished');;
+		setTimeout(function(){ // actually process a second after, so progress bar can show
+			progressBar.width('15%');
+			exportToArray();
+		}, 1000);
 	})
 
 	// handle click filters
@@ -354,16 +378,23 @@ $(document).ready(function(){
 	})
 
 
+	function fillMatcher(resultsJSON){
+		$(resultsJSON).each(function(index){
+			let row = $(this);
+			// console.log(row[0]['email address']);
+		})
+	};
 
 	// handle click "MATCH DATA" button
 	$(document).on('click touchend', '[data-match]', function(e){
 		e.stopPropagation();
 		e.preventDefault();
-		match();
+		exportToArray();
 	})
 
 	function match(){
 		$(document).find(".match").addClass('is-visible');
+		// populate columns from CSV
 	}
 
 })
