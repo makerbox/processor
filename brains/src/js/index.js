@@ -332,7 +332,7 @@ $(document).ready(function(){
 
 
 	// handle export to csv
-	$(document).on('click touchen', '[data-export-csv]', function(e){
+	$(document).on('click touchend', '[data-export-csv]', function(e){
 		e.preventDefault();
 		e.stopPropagation();
 
@@ -389,7 +389,7 @@ $(document).ready(function(){
 	$(document).on('click touchend', '[data-match]', function(e){
 		e.stopPropagation();
 		e.preventDefault();
-		exportToArray();
+		// exportToArray();
 	})
 
 	function match(){
