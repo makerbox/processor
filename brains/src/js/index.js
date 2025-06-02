@@ -4,6 +4,10 @@ var XLSX = require('xlsx'); // require for reading excel sheets
 $(document).ready(function(){
 	let progressBar = $("[data-progress-bar]");
 
+	// init fill the matcher with req. headings
+	let requiredFields = $(document).find("[data-headings]").attr('data-headings').split(',');
+	fillMatcher(requiredFields,requiredFields);
+
 	function exportToArray() { // create an array before exporting to HTML table
 
 		// inactivate table
@@ -28,11 +32,17 @@ $(document).ready(function(){
 					//Splitting of Rows in the csv file    
 					var csvrows = e.target.result.split("\n"); 
 					var headings = csvrows[0].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/); // put the first row into an array of headings	**USE REGEX TO ALLOW COMMAS IN CELL DATA				
+					
+					// use the headings from data hidden in HTML instead
+					let headingsHTML = $(document).find("[data-headings]").attr('data-headings');
+					headings = headingsHTML.split(',');
 					// clean up the headings
 					$(headings).each(function(i){
 						headings[i] = headings[i].trim();
 					})
 					
+
+
 					for (var i = 1; i < csvrows.length; i++) {  // start at i=1 to skip headings row
 					
 
@@ -48,7 +58,7 @@ $(document).ready(function(){
 							
 						}  
 					}
-					fillMatcher(resultsJSON);
+					fillMatcher(headings,requiredFields);
 					filterDates(resultsJSON);
 				}  
 			} else {  
@@ -378,10 +388,32 @@ $(document).ready(function(){
 	})
 
 
-	function fillMatcher(resultsJSON){
-		$(resultsJSON).each(function(index){
-			let row = $(this);
-			// console.log(row[0]['email address']);
+	function fillMatcher(uploaded, stored){
+		let newHTML = '';
+		let matcherRow;
+		$(uploaded).each(function(index){
+			let myName = this;
+			newHTML += `				
+				<tr data-match-row>
+					<td data-match-uploaded="`+myName+`">`+myName+`</td>
+					<td data-match-req></td>
+				</tr>
+			`
+		})
+		$(document).find("[data-match-results]").html(`
+			<table>
+				<tr>
+					<th>Uploaded</th>
+					<th>Required</th>
+				</tr>
+			`+newHTML+`
+			</table>
+		`);
+		let rows = $(document).find("[data-match-row]");
+		$(stored).each(function(i){
+			let thisHeading = this;
+			let thisRow = $(rows[i]).find('[data-match-req]');
+			thisRow.html(thisHeading);
 		})
 	};
 
@@ -389,12 +421,14 @@ $(document).ready(function(){
 	$(document).on('click touchend', '[data-match]', function(e){
 		e.stopPropagation();
 		e.preventDefault();
-		exportToArray();
+		$(document).find(".match").addClass('is-visible');
+		// exportToArray();
 	})
 
 	function match(){
-		$(document).find(".match").addClass('is-visible');
-		// populate columns from CSV
+		// HTML hidden element with required match data which is used in the loop instead of headings
+		// once matched, populate a hidden element to hold the match data
+		// include the data from that element
 	}
 
 })
