@@ -16,7 +16,9 @@ $(document).ready(function(){
 		let resultsJSON = []; 
 		var regex = /^([a-zA-Z0-9\s_\\.\-:])+(.csv)$/;  
 		//Checks whether the file is a valid csv file    
-		if (regex.test($("[data-file-upload]").val().toLowerCase())) {  
+		if (regex.test($("[data-file-upload]").val().toLowerCase())) {
+			// reset the error log
+			$(document).find('[data-error-alert]').text('');
 			$(document).find('[data-process-results]').text('PROCESSING...'); // start loading animation
 			//Checks whether the browser supports HTML5    
 			if (typeof(FileReader) != "undefined") {  
@@ -31,16 +33,12 @@ $(document).ready(function(){
 				reader.onload = function(e) {  
 					//Splitting of Rows in the csv file    
 					var csvrows = e.target.result.split("\n"); 
-					var headings = csvrows[0].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/); // put the first row into an array of headings	**USE REGEX TO ALLOW COMMAS IN CELL DATA				
-					
-					// use the headings from data hidden in HTML instead
-					let headingsHTML = $(document).find("[data-headings]").attr('data-headings');
-					headings = headingsHTML.split(',');
+					var headings = csvrows[0].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/); // put the first row into an array of headings	**USE REGEX TO ALLOW COMMAS IN CELL DATA
+
 					// clean up the headings
 					$(headings).each(function(i){
 						headings[i] = headings[i].trim();
 					})
-					
 
 
 					for (var i = 1; i < csvrows.length; i++) {  // start at i=1 to skip headings row
@@ -58,14 +56,18 @@ $(document).ready(function(){
 							
 						}  
 					}
-					fillMatcher(headings,requiredFields);
-					filterDates(resultsJSON);
+					try{
+						filterDates(resultsJSON);
+					}catch(error){
+						errorAlert('failed filtering dates');
+					};
 				}  
 			} else {  
 				alert("Sorry! Your browser does not support HTML5!");  
-			}  
+			} 
 		} else { 
 			alert('please select a CSV file.');
+			errorAlert('please select a CSV file');
 			// let newregex = /^([a-zA-Z0-9\s_\\.\-:])+(.xlsx)$/; 
 			// if(newregex.test($("[data-file-upload]").val().toLowerCase())){
 			// 	var workbook = XLSX.read($("[data-file-upload]")[0].files[0]);
@@ -78,6 +80,10 @@ $(document).ready(function(){
 
 
 	function filterDates(resultsJSON) {
+		
+		// use the headings from data hidden in HTML instead
+		let headingsHTML = $(document).find("[data-headings]").attr('data-headings');
+		headings = headingsHTML.split(',');
 
 		// get the start and end dates
 		let startDate = parseInt($(document).find('[data-start-date]').attr('data-date'));
@@ -88,7 +94,7 @@ $(document).ready(function(){
 			let row = $(this);
 			// filter out any rows outside the dates set above
 			// get date
-			let dateString = String(row[0]['due date (utc)']).trim();
+			let dateString = String(row[0][headings[12]]).trim();
 			// convert format
 			// date = date.split('/');
 			// date = date[1]+'/'+date[0]+'/'+date[2]; // mm/dd/yyyy because of idiot americans
@@ -108,48 +114,65 @@ $(document).ready(function(){
 			}
 
 		})
-		filterIrrelevant(resultsJSON);
+		try{
+			filterIrrelevant(resultsJSON);
+		}catch(error){
+			errorAlert('failed filtering irrelevant data');
+		};
 	}
 
 	function filterIrrelevant(resultsJSON) {
-	
+		
+		// use the headings from data hidden in HTML instead
+		let headingsHTML = $(document).find("[data-headings]").attr('data-headings');
+		headings = headingsHTML.split(',');
+
 		// for each line item, except the first row of headings
 		$(resultsJSON).each(function(index){
 			let row = this;
 			
 			// blank grade
-			if(row['grade'] == ''){
+			if(row[headings[7]] == ''){
 				delete resultsJSON[index];
 			}
 
 			// zero grade total
-			if(row['grade total'] == 0){
+			if(row[headings[8]] == 0){
 				delete resultsJSON[index];
 			}
 
 			// submission type
-			if(row['submission type'] == ('"[""none""]"')){
+			if(row[headings[6]] == ('"[""none""]"')){
 				delete resultsJSON[index];
 			}
 
 			// assessment name
-			if(row['assessment name'] == ('OPELA' || 'considerations')){
+			if(row[headings[5]] == ('OPELA' || 'considerations')){
 				delete resultsJSON[index];
 			}
 		})
-		mergeStudent(resultsJSON);
+		try{
+			mergeStudent(resultsJSON);
+		}catch(error){
+			errorAlert('failed merging student data');
+		};
 	}
 
 	function mergeStudent(resultsJSON){
+		
+		// use the headings from data hidden in HTML instead
+		let headingsHTML = $(document).find("[data-headings]").attr('data-headings');
+		headings = headingsHTML.split(',');
+
 		// all rows with the same email address become a set of results for a student
 		let emailArray = [];
 		$(resultsJSON).each(function(index){
 			let row = this;
 			// clear any "deleted" rows from before
-			if(row['email address'] === undefined){
+			if(row[headings[0]] === undefined){
 				resultsJSON.slice(index, 1);
 			}else{
-				emailArray.push(row['email address']); // for unique array of names
+				emailArray.push(row[headings[0]]); // for unique array of names
 			}
 		});
 		// get array of unique names
@@ -166,8 +189,8 @@ $(document).ready(function(){
 			thisStudent['email'] = thisEmail;
 			$(resultsJSON).each(function(){
 				let row = this;
-				let email = String(row["email address"]);
-				let studentID = String(row["student id"]);
+				let email = String(row[headings[0]]);
+				let studentID = String(row[headings[1]]);
 				if(email == thisEmail){
 					thisStudent['results'].push(row);
 					thisStudent['student id'] = studentID;
@@ -175,10 +198,19 @@ $(document).ready(function(){
 			})	
 			mergedArray.push(thisStudent);
 		})
-		calcResults(mergedArray);
+		try{
+			calcResults(mergedArray);
+		}catch(error){
+			errorAlert('failed calculating results');
+		};
 	}
 
 	function calcResults(mergedArray){
+		
+		// use the headings from data hidden in HTML instead
+		let headingsHTML = $(document).find("[data-headings]").attr('data-headings');
+		headings = headingsHTML.split(',');
+
 		// for each student
 		$(mergedArray).each(function(){
 			let thisStudent = this;
@@ -188,15 +220,15 @@ $(document).ready(function(){
 			// for each result
 			$(thisStudent["results"]).each(function(){
 				let thisResult = this;
-				let thisGrade = parseInt(thisResult['grade']);
-				let thisGradeTotal = parseInt(thisResult['grade total']);
-				if(thisResult['grade'].indexOf('%') != -1){ // if it is a percent, calculate the grade
+				let thisGrade = parseInt(thisResult[headings[7]]);
+				let thisGradeTotal = parseInt(thisResult[headings[8]]);
+				if(thisResult[headings[7]].indexOf('%') != -1){ // if it is a percent, calculate the grade
 					thisGrade = (thisGradeTotal / 100) * thisGrade;
-					thisResult['grade'] = thisGrade;
+					thisResult[headings[7]] = thisGrade;
 				}
 				
 				// calc pass / fail
-				if((thisGrade < (thisGradeTotal / 2)) || (thisResult['submission state'] == 'unsubmitted') || (thisResult['grade'] == 'incomplete')){
+				if((thisGrade < (thisGradeTotal / 2)) || (thisResult[headings[9]] == 'unsubmitted') || (thisResult[headings[7]] == 'incomplete')){
 					thisResult["passFail"] = "fail";
 				}else{
 					thisResult["passFail"] = "pass";
@@ -215,8 +247,11 @@ $(document).ready(function(){
 			thisStudent["passPerc"] = Math.round(100 / (thisStudent["results"].length / numPass));
 			thisStudent["failPerc"] = 100 - Math.round(100 / (thisStudent["results"].length / numPass))	;
 		})
-
-		processTable(mergedArray);
+		try{
+			processTable(mergedArray);
+		}catch(error){
+			errorAlert('failed processing into table');
+		};
 	}
 
 	function returnName(email){
@@ -227,6 +262,10 @@ $(document).ready(function(){
 	}
 
 	function processTable(data){
+		// use the headings from data hidden in HTML instead
+		let headingsHTML = $(document).find("[data-headings]").attr('data-headings');
+		headings = headingsHTML.split(',');
+
 		let table = $(document).find('[data-results-output]');
 		table.html(''); // clear table ready for new data
 		$(data).each(function(index){
@@ -251,14 +290,14 @@ $(document).ready(function(){
 			htmlRow += '<tr><th>Pass/fail</th><th>Grade</th><th>Total</th><th>Submitted date</th><th>Due date</th><th>Submission state</th><th>Org Unit</th><th>Submission type</th></tr>';
 			$(thisStudent['results']).each(function(){
 				let thisResult = this;
-				if(thisResult['submitted date (utc)'].length >= 4){ // >= 4 in case it is just an empty line ending booger
-					dateSubmitted = new Date(thisResult['submitted date (utc)'].split('\r')[0]); //.split('\r')[0] to clean up boogers from line endings
+				if(thisResult[headings[10]].length >= 4){ // >= 4 in case it is just an empty line ending booger
+					dateSubmitted = new Date(thisResult[headings[10]].split('\r')[0]); //.split('\r')[0] to clean up boogers from line endings
 					dateSubmitted = dateSubmitted.toLocaleDateString("en-GB");
 				}else{
 					dateSubmitted = 'no date';
 				}
-				if(thisResult['due date (utc)'].length >= 4){ // >= 4 in case it is just an empty line ending booger
-					dateDue = new Date(thisResult['due date (utc)'].split('\r')[0]); //.split('\r')[0] to clean up boogers from line endings
+				if(thisResult[headings[12]].length >= 4){ // >= 4 in case it is just an empty line ending booger
+					dateDue = new Date(thisResult[headings[12]].split('\r')[0]); //.split('\r')[0] to clean up boogers from line endings
 					dateDue = dateDue.toLocaleDateString("en-GB");
 				}else{
 					dateDue = 'no date';
@@ -305,7 +344,11 @@ $(document).ready(function(){
 		progressBar.width('10%').removeClass('is-finished', 'is-populating');
 		setTimeout(function(){ // actually process a second after, so progress bar can show
 			progressBar.width('15%').addClass('is-populating');
-			exportToArray();
+			try{
+				exportToArray();
+			}catch(error){
+				errorAlert('unknown fail');
+			};
 		}, 1000);
 	})
 
@@ -395,7 +438,8 @@ $(document).ready(function(){
 			let myName = this;
 			newHTML += `				
 				<tr data-match-row>
-					<td data-match-uploaded="`+myName+`">`+myName+`</td>
+					<td data-match-uploaded="`+myName+`" draggable="true">`+myName+`</td>
+					<td data-match-new></td>
 					<td data-match-req></td>
 				</tr>
 			`
@@ -404,6 +448,7 @@ $(document).ready(function(){
 			<table>
 				<tr>
 					<th>Uploaded</th>
+					<th></th>
 					<th>Required</th>
 				</tr>
 			`+newHTML+`
@@ -412,8 +457,10 @@ $(document).ready(function(){
 		let rows = $(document).find("[data-match-row]");
 		$(stored).each(function(i){
 			let thisHeading = this;
-			let thisRow = $(rows[i]).find('[data-match-req]');
-			thisRow.html(thisHeading);
+			let thisReq = $(rows[i]).find('[data-match-req]');
+			thisReq.html(thisHeading).attr('data-match-req', thisHeading);
+			let thisNew = $(rows[i]).find('[data-match-new]');
+			thisNew.html(thisHeading).attr('data-match-new', thisHeading);
 		})
 	};
 
@@ -421,14 +468,127 @@ $(document).ready(function(){
 	$(document).on('click touchend', '[data-match]', function(e){
 		e.stopPropagation();
 		e.preventDefault();
-		$(document).find(".match").addClass('is-visible');
-		// exportToArray();
+		// inactivate table
+		let resultsJSON = []; 
+		var regex = /^([a-zA-Z0-9\s_\\.\-:])+(.csv)$/;  
+		//Checks whether the file is a valid csv file    
+		if (regex.test($("[data-file-upload]").val().toLowerCase())) {
+			//Checks whether the browser supports HTML5    
+			if (typeof(FileReader) != "undefined") {  
+				// rock and roll!
+				var reader = new FileReader();
+				let fileUpload = $("[data-file-upload]")[0].files[0];
+
+				// process the file
+				reader.readAsText(fileUpload); 
+
+
+				reader.onload = function(e) {  
+					//Splitting of Rows in the csv file    
+					var csvrows = e.target.result.split("\n"); 
+					var headings = csvrows[0].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/); // put the first row into an array of headings	**USE REGEX TO ALLOW COMMAS IN CELL DATA				
+					// clean up the headings
+					$(headings).each(function(i){
+						headings[i] = headings[i].trim();
+					})
+
+					try{
+						fillMatcher(headings,requiredFields);
+					}catch(error){
+						errorAlert('failed to fill matcher');
+					};
+				}
+				$(document).find(".match").addClass('is-visible');
+			} else {  
+				alert("Sorry! Your browser does not support HTML5!");  
+			}  
+		} else { 
+			alert('please select a CSV file.');
+		}
 	})
 
-	function match(){
-		// HTML hidden element with required match data which is used in the loop instead of headings
-		// once matched, populate a hidden element to hold the match data
-		// include the data from that element
+	// handle click "SAVE MATCH" button
+	$(document).on('click touchend', '[data-save-match]', function(e){
+		e.preventDefault();
+		e.stopPropagation();
+
+		// get new headings
+		let newHeadings = '';
+		$(document).find("[data-match-new]").each(function(){
+			let thisHeading = $(this);
+			newHeadings += thisHeading.attr('data-match-new') + ','	;
+		});
+
+		// populate hidden element
+		$(document).find("[data-headings]").attr('data-headings', newHeadings);
+
+		// reset table
+		let table = $(document).find('[data-results-output]');
+		table.html(''); // clear table ready for new data
+
+		// close modal
+		$(document).find('.match').removeClass('is-visible');
+	})
+
+
+	// handle close matcher
+	$(document).on('click touchend', '[data-close-match]', function(e){
+		e.preventDefault();
+		e.stopPropagation();
+
+		$(document).find(".match").removeClass('is-visible');
+	})
+
+	// handle drag and drop
+	let currentlyHeld = '';
+	$(document).on('dragstart', '[data-match-uploaded]', function(e){
+		let thisHeading = $(e.target).attr('data-match-uploaded');
+		currentlyHeld = thisHeading;
+	})
+
+	$(document).on('drop', '[data-match-new], [data-match-req]', function(e){
+		e.preventDefault();
+		let thisTarget = $(e.target);
+		let displayCell = '';
+		if(thisTarget.attr('data-match-req')){ // if dropping directly on req cell
+			displayCell = thisTarget.parent().find('[data-match-new]');
+		}else{
+			displayCell = thisTarget;
+		}
+		if(!displayCell.hasClass('is-active')){ // if not already filled
+			displayCell.addClass('is-active').attr('data-match-new', currentlyHeld).text(currentlyHeld); // fill data-match-new
+			$(document).find('[data-match-uploaded="'+currentlyHeld+'"]').text('').addClass('is-empty'); // empty data-match-uploaded
+			currentlyHeld = '';
+		}
+	})
+
+	$(document).on('dragover', '[data-match-new], [data-match-req]', function(e){
+		e.preventDefault();
+	})
+
+	// handle click filled cell to revert
+	$(document).on('click touchend', '[data-match-new].is-active', function(e){
+		e.preventDefault();
+		e.stopPropagation();
+		let thisCell = $(this);
+		let heading = thisCell.attr('data-match-new');
+		let original = $(document).find('[data-match-uploaded="'+heading+'"]');
+		// refill original
+		original.removeClass('is-empty').text(heading);
+		// deactivate data-match-new
+		thisCell.removeClass('is-active');
+		// refill with req
+		let myReq = thisCell.parent().find('[data-match-req]').attr('data-match-req');
+		thisCell.attr('data-match-new', myReq).text(myReq);
+
+	})
+
+	// display errors in DOM as they are captured
+	function errorAlert(errorStep){
+		progressBar.width('0%');
+		$(document).find('[data-error-alert]').append(`
+			<span>..${errorStep}..</span>
+		`);
 	}
 
 })

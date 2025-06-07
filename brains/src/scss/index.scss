@@ -41,7 +41,7 @@ h2{
 	padding-bottom: 1rem;
 }
 
-p, li, label, td{
+p, li, label, td, th{
 	font-family: 'Sora';
 	font-size: 1rem;
 }
@@ -233,6 +233,7 @@ li{
 	height: 100%;
 	padding: 3rem;
 	background: rgba(0,0,0,0.5);
+	z-index: 99;
 	&.is-visible{
 		display: block;
 	}
@@ -245,6 +246,9 @@ li{
 	background: #FFF;
 	border-radius: 1rem;
 	padding: 3rem;
+	.buttons{
+		padding-left: 0;
+	}
 }
 
 .match__close{
@@ -253,12 +257,45 @@ li{
 	right: 3rem;
 	width: 2rem;
 	height: 2rem;
-	pointer: cursor;
+	cursor: pointer;
 	svg{
 		width: 100%;
 		height: 100%;
 		display: block;
 		object-fit: contain;
+	}
+}
+
+[data-match-uploaded]{
+	cursor: pointer;
+	background: #CCC;
+	color: #FFF;
+	border: 2px solid #FFF;
+	&.is-empty{
+		background: #FFF;
+		pointer-events: none;
+	}
+}
+[data-match-new]{
+	opacity: 0;
+	&.is-active{
+		background: $blue;
+		opacity: 1;
+		cursor: pointer;
+	}
+}
+[data-match-req]{
+	border: 1px solid #CCC;
+}
+.match-results{
+	overflow-y: scroll;
+	height: 50%;
+	margin-top: 2rem;
+	th{
+		text-align: left;
+	}
+	th, td{
+		padding: 1rem;
 	}
 }
 
@@ -288,4 +325,13 @@ li{
 		right: 0;
 		width: 0% !important;
 	}
+}
+
+[data-error-alert]{
+	position: absolute;
+	top: 50%;
+	transform: translateY(-50%);
+	left: 2rem;
+	color: red;
+	font-size: 1em;
 }
